@@ -14,8 +14,20 @@ The file is under test.
 Simply clone this repo wherever you want and make a soft link in your
 home directory to the .emacs file.
 
+> git clone https://github.com/periket2000/emacs.git ~/emacs
+> ln -s ~/emacs/.emacs ~/.emacs 
+
 Then run emacs and enjoy.
 
 ## Start here (emacs tutorial)
 
 > C-h t
+
+### Notes
+
+I recommend install iTerm for mac because the Meta key (heavily used in emacs)
+bring us a lot of headaches. So once installed, in the iTerm -> preferences ->
+profiles -> keys you can set the "left command key" as Esc+ and this key will
+act as Meta in emacs.
+The right command key is left for 3rd level selector purposes (heavily used in
+Spanish like keyboard's layouts), for instance to insert @ and # characters.
