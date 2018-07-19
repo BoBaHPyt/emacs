@@ -52,6 +52,7 @@
 
 ;; Marco configuration
 (elpy-enable)
+(ido-mode t)
 (require 'py-autopep8)
 (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
 (global-set-key (kbd "C-x g") 'magit-status)
