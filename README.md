@@ -25,9 +25,10 @@ Then run emacs and enjoy.
 
 ### Notes
 
-I recommend install iTerm for mac because the Meta key (heavily used in emacs)
+I recommend installing iTerm for mac because the Meta key (heavily used in emacs)
 bring us a lot of headaches. So once installed, in the iTerm -> preferences ->
 profiles -> keys you can set the "left command key" as Esc+ and this key will
 act as Meta in emacs.
+
 The right command key is left for 3rd level selector purposes (heavily used in
 Spanish like keyboard's layouts), for instance to insert @ and # characters.
