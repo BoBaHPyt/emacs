@@ -35,6 +35,8 @@
     use-package
     py-autopep8
     free-keys
+    neotree
+    all-the-icons
     material-theme))
 
 (mapc #'(lambda (package)
@@ -55,51 +57,38 @@
 (ido-mode t)
 (require 'py-autopep8)
 (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
-(global-set-key (kbd "C-x g") 'magit-status)
+
+;; Keys with C-c means for coding
+(global-set-key (kbd "C-c s") 'magit-status)
+(global-set-key (kbd "C-c b") 'magit-branch-and-checkout)
+(global-set-key (kbd "C-c f") 'elpy-find-file)
+(global-set-key (kbd "C-c t") 'neotree-toggle)
+(global-set-key (kbd "C-c g") 'neotree-find)
+(global-set-key (kbd "C-c d") 'elpy-goto-definition)
+(global-set-key (kbd "C-c r") 'pop-tag-mark)
 (global-set-key (kbd "C-t") 'term)
-(global-set-key (kbd "C-c C-f") 'elpy-find-file)
 
-;; Marco dired sidebar
-(require 'use-package)
-(use-package dired-sidebar
-  :bind (("C-x C-n" . dired-sidebar-toggle-sidebar))
-  :ensure t
-  :commands (dired-sidebar-toggle-sidebar)
-  :config
-  (setq dired-sidebar-subtree-line-prefix " .")
-  (cond
-   ((eq system-type 'darwin)
-    (if (display-graphic-p)
-        (setq dired-sidebar-theme 'icons)
-      (setq dired-sidebar-theme 'nerd))
-    (setq dired-sidebar-face '(:family "Helvetica" :height 140)))
-   ((eq system-type 'windows-nt)
-    (setq dired-sidebar-theme 'nerd)
-    (setq dired-sidebar-face '(:family "Lucida Sans Unicode" :height 110)))
-   (:default
-    (setq dired-sidebar-theme 'nerd)
-    (setq dired-sidebar-face '(:family "Arial" :height 140))))
+;; movement
+(defun move-line-up ()
+  "Move up the current line."
+  (interactive)
+  (transpose-lines 1)
+  (forward-line -2)
+  (indent-according-to-mode))
 
-  (setq dired-sidebar-use-term-integration t)
-  (setq dired-sidebar-use-custom-font t)
+(defun move-line-down ()
+  "Move down the current line."
+  (interactive)
+  (forward-line 1)
+  (transpose-lines 1)
+  (forward-line -1)
+  (indent-according-to-mode))
 
-  (use-package all-the-icons-dired
-    ;; M-x all-the-icons-install-fonts
-    :ensure t
-    :commands (all-the-icons-dired-mode)))
+;; Ctrl-Shift-(up/down)
+(global-set-key (kbd "C-S-<up>")  'move-line-up)
+(global-set-key (kbd "C-S-<down>")  'move-line-down)
 
-;; init.el ends heree
-(custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- '(package-selected-packages
-   (quote
-    (helm-projectile projectile all-the-icons-dired material-theme elpy better-defaults))))
-(custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
- )
+;; neo-tree config
+(setq neo-theme (if (display-graphic-p) 'icons 'arrow))
+(setq neo-window-width 40)
+
