@@ -37,6 +37,7 @@
     free-keys
     neotree
     all-the-icons
+    rainbow-delimiters
     material-theme))
 
 (mapc #'(lambda (package)
@@ -57,6 +58,7 @@
 (ido-mode t)
 (require 'py-autopep8)
 (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 
 ;; Keys with C-c means for coding
 (global-set-key (kbd "C-c s") 'magit-status)
@@ -92,3 +94,24 @@
 (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
 (setq neo-window-width 40)
 
+;; Open in browser
+(setq api_url (getenv "API_URL"))
+
+(setq browse-url-generic-program
+      (cond
+       ((eq system-type 'darwin) "open")
+       (linux (executable-find "firefox"))
+       ))
+
+(defun w3mext-open-link-or-image-or-url (param1)
+  "Opens the current link or image or current page's uri or any url-like text under cursor in firefox."
+  (interactive)
+  (let (url)
+    (if (string= major-mode "w3m-mode")
+        (setq url (or (w3m-anchor) (w3m-image) w3m-current-url)))
+    (if (> (length param1) 0)
+	(setq url param1))
+    (browse-url-generic (if url url (car (browse-url-interactive-arg "URL: "))))
+    ))
+(global-set-key (kbd "C-c o") 'w3mext-open-link-or-image-or-url)
+(global-set-key (kbd "C-c p") (lambda () (interactive) (w3mext-open-link-or-image-or-url api_url)))
