@@ -36,7 +36,6 @@
     py-autopep8
     free-keys
     neotree
-    all-the-icons
     rainbow-delimiters
     material-theme))
 
@@ -116,3 +115,6 @@
     ))
 (global-set-key (kbd "C-c o") 'w3mext-open-link-or-image-or-url)
 (global-set-key (kbd "C-c p") (lambda () (interactive) (w3mext-open-link-or-image-or-url api_url)))
+
+;; load external
+(if (file-exists-p "~/.custom.el") (load-file "~/.custom.el"))
