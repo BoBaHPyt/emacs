@@ -95,6 +95,7 @@
 (setq neo-window-width 40)
 
 ;; Open in browser
+;; API_URL should be with https:// or http://
 (setq api_url (getenv "API_URL"))
 
 (setq browse-url-generic-program
