@@ -70,6 +70,8 @@
 ;; pop-tag-mark allow us go back when we went to definition
 (global-set-key (kbd "C-c r") 'pop-tag-mark)
 (global-set-key (kbd "C-t") 'term)
+(global-set-key (kbd "C-c C-]") 'enlarge-window-horizontally)
+(global-set-key (kbd "C-c C-_") 'shrink-window-horizontally)
 
 ;; movement
 (defun move-line-up ()
