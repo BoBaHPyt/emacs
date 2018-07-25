@@ -122,3 +122,9 @@
 
 ;; load external
 (if (file-exists-p "~/.custom.el") (load-file "~/.custom.el"))
+
+;; Develop and keep personal snippets under ~/emacs.d/mysnippets
+(setq yas-snippet-dirs '("~/.emacs.d/mysnippets"))
+
+;; Load yasnippet
+(yas-global-mode 1)
