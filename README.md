@@ -17,6 +17,7 @@ home directory to the .emacs file.
 > git clone https://github.com/periket2000/emacs.git ~/emacs
 
 > ln -s ~/emacs/.emacs ~/.emacs 
+> ln -s ~/emacs/snippets ~/.emacs.d/mysnippets
 
 Then run emacs and enjoy.
 
