@@ -37,7 +37,8 @@
     free-keys
     neotree
     rainbow-delimiters
-    material-theme))
+    material-theme
+    iedit))
 
 (mapc #'(lambda (package)
     (unless (package-installed-p package)
@@ -128,3 +129,17 @@
 
 ;; Load yasnippet
 (yas-global-mode 1)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(package-selected-packages
+   (quote
+    (iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired))))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
