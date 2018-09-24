@@ -73,6 +73,8 @@
 (global-set-key (kbd "C-t") 'term)
 (global-set-key (kbd "C-c C-]") 'enlarge-window-horizontally)
 (global-set-key (kbd "C-c C-_") 'shrink-window-horizontally)
+;; next window
+(global-set-key (kbd "C-c n") 'ace-window)
 
 ;; movement
 (defun move-line-up ()
@@ -136,7 +138,7 @@
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
    (quote
-    (iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired))))
+    (rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
