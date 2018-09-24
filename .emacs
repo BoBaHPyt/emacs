@@ -67,6 +67,7 @@
 (global-set-key (kbd "C-c x") 'elpy-rgrep-symbol)
 (global-set-key (kbd "C-c t") 'neotree-toggle)
 (global-set-key (kbd "C-c g") 'neotree-find)
+(global-set-key (kbd "C-c C-g") 'grep-find)
 (global-set-key (kbd "C-c d") 'elpy-goto-definition)
 ;; pop-tag-mark allow us go back when we went to definition
 (global-set-key (kbd "C-c r") 'pop-tag-mark)
