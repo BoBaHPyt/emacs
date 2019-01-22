@@ -17,3 +17,8 @@
 ; replace in place
 (require 'iedit)
 (global-set-key (kbd "C-c C-i") 'iedit-mode)
+
+;; set grep exclude shit
+(setq fcommand (concat "find " (concat (getenv "PWD") " -type f -path '*build*' -prune -o -path '*idea*' -prune -o -path '*dist*' -prune -o -path '*.git*' -prune -o -path '*egg*' -prune -o -print0 | xargs -0 grep -s -nH -e ")))
+;(setq grep-find-command "find (getenv 'PWD') -type f -path '*build*' -prune -o -print0 | xargs -0 grep -s -nH -e ")
+(setq grep-find-command fcommand)

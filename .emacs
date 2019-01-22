@@ -19,12 +19,13 @@
 ;; INSTALL PACKAGES
 ;; --------------------------------------
 (require 'package)
-;(add-to-list 'package-archives
-;             '("melpa-stable" . "https://stable.melpa.org/packages/"))
 (add-to-list 'package-archives
-                 '("melpa" . "http://melpa.org/packages/"))
-
+             '("melpa" . "https://melpa.org/packages/"))
+(when (< emacs-major-version 24)
+  ;; For important compatibility libraries like cl-lib
+  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
 (package-initialize)
+
 (when (not package-archive-contents)
   (package-refresh-contents))
 
@@ -39,6 +40,9 @@
     rainbow-delimiters
     material-theme
     iedit))
+
+;; JAVA MODE
+;; Install it directly from M-x list-packages -> jdee
 
 (mapc #'(lambda (package)
     (unless (package-installed-p package)
@@ -76,6 +80,8 @@
 (global-set-key (kbd "C-c C-_") 'shrink-window-horizontally)
 ;; next window
 (global-set-key (kbd "C-c n") 'ace-window)
+(global-set-key (kbd "C-c <right>") 'ace-window)
+
 
 ;; movement
 (defun move-line-up ()
@@ -137,6 +143,10 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(find-grep-options "-q")
+ '(grep-find-ignored-directories
+   (quote
+    ("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}")))
  '(package-selected-packages
    (quote
     (rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired))))
