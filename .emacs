@@ -64,6 +64,10 @@
 (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 
+(use-package dired-sidebar
+  :ensure t
+  :commands (dired-sidebar-toggle-sidebar))
+
 ;; Keys with C-c means for coding
 (global-set-key (kbd "C-c s") 'magit-status)
 (global-set-key (kbd "C-c b") 'magit-branch-and-checkout)
