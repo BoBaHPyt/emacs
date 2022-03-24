@@ -32,6 +32,7 @@
 (defvar myPackages
   '(better-defaults
     elpy
+    auto-complete
     magit
     use-package
     py-autopep8
@@ -67,6 +68,8 @@
 (use-package dired-sidebar
   :ensure t
   :commands (dired-sidebar-toggle-sidebar))
+
+(ac-config-default)
 
 ;; Keys with C-c means for coding
 (global-set-key (kbd "C-c s") 'magit-status)
@@ -150,11 +153,9 @@
  ;; If there is more than one, they won't work right.
  '(find-grep-options "-q")
  '(grep-find-ignored-directories
-   (quote
-    ("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}")))
+   '("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}"))
  '(package-selected-packages
-   (quote
-    (rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired))))
+   '(rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
