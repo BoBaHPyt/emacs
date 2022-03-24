@@ -76,8 +76,8 @@
 (global-set-key (kbd "C-c b") 'magit-branch-and-checkout)
 (global-set-key (kbd "C-c f") 'elpy-find-file)
 (global-set-key (kbd "C-c x") 'elpy-rgrep-symbol)
-(global-set-key (kbd "C-c t") 'neotree-toggle)
-(global-set-key (kbd "C-c g") 'neotree-find)
+;;(global-set-key (kbd "C-c t") 'neotree-toggle)
+;;(global-set-key (kbd "C-c g") 'neotree-find)
 (global-set-key (kbd "C-c C-g") 'grep-find)
 (global-set-key (kbd "C-c d") 'elpy-goto-definition)
 ;; pop-tag-mark allow us go back when we went to definition
@@ -88,6 +88,8 @@
 ;; next window
 (global-set-key (kbd "C-c n") 'ace-window)
 (global-set-key (kbd "C-c <right>") 'ace-window)
+;; sidebar
+(global-set-key (kbd "C-c t") 'dired-sidebar-toggle-sidebar)
 
 
 ;; movement
