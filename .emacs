@@ -88,7 +88,7 @@
 ;; next window
 (global-set-key (kbd "C-c n") 'ace-window)
 (global-set-key (kbd "C-c <right>") 'ace-window)
-;; sidebar
+;; sidebar (if emacs oppened with filename, no project-root is set, just run "emacs ." where . is the current directory)
 (global-set-key (kbd "C-c t") 'dired-sidebar-toggle-sidebar)
 
 
@@ -141,7 +141,7 @@
 (global-set-key (kbd "C-c p") (lambda () (interactive) (w3mext-open-link-or-image-or-url api_url)))
 
 ;; load external
-(if (file-exists-p "~/.custom.el") (load-file "~/.custom.el"))
+(if (file-exists-p "~/emacs/.custom.el") (load-file "~/emacs/.custom.el"))
 
 ;; Develop and keep personal snippets under ~/emacs.d/mysnippets
 (setq yas-snippet-dirs '("~/.emacs.d/mysnippets"))

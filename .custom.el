@@ -22,3 +22,23 @@
 (setq fcommand (concat "find " (concat (getenv "PWD") " -type f -path '*build*' -prune -o -path '*idea*' -prune -o -path '*dist*' -prune -o -path '*.git*' -prune -o -path '*egg*' -prune -o -print0 | xargs -0 grep -s -nH -e ")))
 ;(setq grep-find-command "find (getenv 'PWD') -type f -path '*build*' -prune -o -print0 | xargs -0 grep -s -nH -e ")
 (setq grep-find-command fcommand)
+
+
+;;define function for beautify code
+(defun tidy-python ()
+  "Tidies the Python content in the buffer using `black'"
+  (interactive)
+  (shell-command-on-region
+   ;; beginning and end of buffer
+   (point-min)
+   (point-max)
+   ;; command and parameters (pacman -S python-black before)
+   "black -"
+   ;; output buffer
+   (current-buffer)
+   ;; replace?
+   t
+   ;; name of the error buffer
+   "*Tidy Error Buffer*"
+   ;; show error buffer?
+   t))
