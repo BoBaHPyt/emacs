@@ -40,6 +40,7 @@
     neotree
     rainbow-delimiters
     material-theme
+    dumb-jump
     iedit))
 
 ;; JAVA MODE
@@ -89,7 +90,7 @@
 (global-set-key (kbd "C-c n") 'ace-window)
 (global-set-key (kbd "C-c <right>") 'ace-window)
 ;; sidebar (if emacs oppened with filename, no project-root is set, just run "emacs ." where . is the current directory)
-(global-set-key (kbd "C-c t") 'dired-sidebar-toggle-sidebar)
+(global-set-key (kbd "C-c t") 'dired-sidebar-toggle-with-current-directory)
 
 
 ;; movement

@@ -42,3 +42,7 @@
    "*Tidy Error Buffer*"
    ;; show error buffer?
    t))
+
+;; go to definition (performs better with silversearcher -> pacman -S the_silver_searcher)
+;;(require 'dumb-jump)
+(global-set-key (kbd "C-c g") 'xref-find-references)
