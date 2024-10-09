@@ -53,6 +53,16 @@
 
 ;; BASIC CUSTOMIZATION
 ;; --------------------------------------
+(defun close-all-buff ()
+  (interactive)
+  (mapc 'kill-buffer (buffer-list))
+)
+(defun run-python-ide ()
+  (interactive)
+  (if (file-exists-p "./venv") (pyvenv-activate "./venv"))
+  ;(mapc 'kill-buffer (buffer-list))
+  (neotree-show)
+)
 
 (setq inhibit-startup-message t) ;; hide the startup message
 (load-theme 'material t) ;; load material theme
@@ -65,6 +75,8 @@
 (require 'py-autopep8)
 (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
+(add-hook 'prog-mode-hook 'display-line-numbers-mode)
+(add-hook 'python-mode-hook (lambda () (auto-complete-mode -1)))
 
 (use-package dired-sidebar
   :ensure t
@@ -73,6 +85,7 @@
 (ac-config-default)
 
 ;; Keys with C-c means for coding
+(global-set-key (kbd "C-c i") 'run-python-ide)
 (global-set-key (kbd "C-c s") 'magit-status)
 (global-set-key (kbd "C-c b") 'magit-branch-and-checkout)
 (global-set-key (kbd "C-c f") 'elpy-find-file)
@@ -115,7 +128,7 @@
 
 ;; neo-tree config
 (setq neo-theme (if (display-graphic-p) 'icons 'arrow))
-(setq neo-window-width 40)
+(setq neo-window-width 30)
 
 ;; Open in browser
 ;; API_URL should be with https:// or http://
@@ -165,3 +178,6 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(put 'downcase-region 'disabled nil)
+
+(setq neo-hidden-regexp-list '("^\\.(?!gitignore).*" "^#.*#$" "~$" "__pycache__"))
