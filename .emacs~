@@ -41,13 +41,7 @@
     rainbow-delimiters
     material-theme
     dumb-jump
-    iedit
-    request
-    tblui
-    markdown-mode
-    spinner
-    lv
-    ht))
+    iedit))
 
 ;; JAVA MODE
 ;; Install it directly from M-x list-packages -> jdee
@@ -56,15 +50,6 @@
     (unless (package-installed-p package)
       (package-install package)))
       myPackages)
-(add-to-list 'load-path "~/.emacs.d/custompackages/")
-(require 'openai)
-(require 'codegpt)
-(require 'chatgpt)
-
-(setq openai-base-url "https://gpt-chatbotru-4-o1.ru/api/openai/v1")
-(setq codegpt-tunnel 'chat)
-(setq codegpt-model "gpt-4o")
-(setq openai-key "api-key")
 
 ;; BASIC CUSTOMIZATION
 ;; --------------------------------------
@@ -100,7 +85,7 @@
 (ac-config-default)
 
 ;; Keys with C-c means for coding
-(global-set-key (kbd "C-c i") 'run-python-ide)
+(global-set-key (kbd "C-i") 'run-python-ide)
 (global-set-key (kbd "C-c s") 'magit-status)
 (global-set-key (kbd "C-c b") 'magit-branch-and-checkout)
 (global-set-key (kbd "C-c f") 'elpy-find-file)
@@ -186,16 +171,11 @@
  '(grep-find-ignored-directories
    '("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}"))
  '(package-selected-packages
-   '(chatgpt-shell realgud rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired)))
+   '(rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
-(when (not window-system)
-  (set-face-background 'default "unspecified-bg")
-)
 (put 'downcase-region 'disabled nil)
-
-(setq neo-hidden-regexp-list '("^\\.(?!gitignore).*" "^#.*#$" "~$" "__pycache__"))
