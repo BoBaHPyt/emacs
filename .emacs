@@ -32,14 +32,12 @@
 (defvar myPackages
   '(better-defaults
     elpy
-    auto-complete
     magit
     use-package
     py-autopep8
     free-keys
     neotree
     rainbow-delimiters
-    material-theme
     dumb-jump
     iedit
     request
@@ -47,7 +45,9 @@
     markdown-mode
     spinner
     lv
-    ht))
+    ht
+    doom-modeline
+    ace-window))
 
 ;; JAVA MODE
 ;; Install it directly from M-x list-packages -> jdee
@@ -61,10 +61,12 @@
 (require 'codegpt)
 (require 'chatgpt)
 
-(setq openai-base-url "https://gpt-chatbotru-4-o1.ru/api/openai/v1")
+(setq openai-base-url "http://192.210.243.31:1337/v1")
+(setq openai-key "api-key")
 (setq codegpt-tunnel 'chat)
 (setq codegpt-model "gpt-4o")
-(setq openai-key "api-key")
+(setq chatgpt-model "gpt-4o")
+(setq chatgpt-animate-fps 30)
 
 ;; BASIC CUSTOMIZATION
 ;; --------------------------------------
@@ -80,18 +82,17 @@
 )
 
 (setq inhibit-startup-message t) ;; hide the startup message
-(load-theme 'material t) ;; load material theme
-
 ;; init.el ends here
 
 ;; Marco configuration
 (elpy-enable)
+(doom-modeline-mode)
 (ido-mode t)
 (require 'py-autopep8)
 (add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
-(add-hook 'python-mode-hook (lambda () (auto-complete-mode -1)))
+(add-hook 'python-mode-hook (lambda () (company-mode 1)))
 
 (use-package dired-sidebar
   :ensure t
@@ -182,20 +183,27 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
+ '(custom-safe-themes
+   '("b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "dd4582661a1c6b865a33b89312c97a13a3885dc95992e2e5fc57456b4c545176" "571661a9d205cb32dfed5566019ad54f5bb3415d2d88f7ea1d00c7c794e70a36" "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec" "8c7e832be864674c220f9a9361c851917a93f921fedb7717b1b5ece47690c098" "93011fe35859772a6766df8a4be817add8bfe105246173206478a0706f88b33d" "30d174000ea9cbddecd6cc695943afb7dba66b302a14f9db5dd65074e70cc744" "4594d6b9753691142f02e67b8eb0fda7d12f6cc9f1299a49b819312d6addad1d" "e4a702e262c3e3501dfe25091621fe12cd63c7845221687e36a79e17cf3a67e0" "f5f80dd6588e59cfc3ce2f11568ff8296717a938edd448a947f9823a4e282b66" "2b501400e19b1dd09d8b3708cefcb5227fda580754051a24e8abf3aff0601f87" "014cb63097fc7dbda3edf53eb09802237961cbb4c9e9abd705f23b86511b0a69" "4990532659bb6a285fee01ede3dfa1b1bdf302c5c3c8de9fad9b6bc63a9252f7" "350fef8767e45b0f81dd54c986ee6854857f27067bac88d2b1c2a6fa7fecb522" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" default))
  '(find-grep-options "-q")
  '(grep-find-ignored-directories
    '("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}"))
  '(package-selected-packages
-   '(chatgpt-shell realgud rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree material-theme magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired)))
+   '(doom-modeline doom-themes chatgpt-shell realgud rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  )
+(load-theme 'doom-Iosvkem)
 (when (not window-system)
   (set-face-background 'default "unspecified-bg")
-)
+  )
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(display-battery-mode 1)
+
 (put 'downcase-region 'disabled nil)
 
 (setq neo-hidden-regexp-list '("^\\.(?!gitignore).*" "^#.*#$" "~$" "__pycache__"))

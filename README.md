@@ -14,10 +14,13 @@ The file is under test.
 Simply clone this repo wherever you want and make a soft link in your
 home directory to the .emacs file.
 
-> git clone https://github.com/periket2000/emacs.git ~/emacs
+> git clone https://github.com/BoBaHPyt/emacs.git ~/emacs
 
-> ln -s ~/emacs/.emacs ~/.emacs 
+> ln -s ~/emacs/.emacs ~/.emacs
+> 
 > ln -s ~/emacs/snippets ~/.emacs.d/mysnippets
+>
+> ln -s ~/emacs/custompackages ~/.emacs.d/custompackages
 
 Then run emacs and enjoy.
 

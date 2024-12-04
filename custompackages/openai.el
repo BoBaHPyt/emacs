@@ -129,7 +129,8 @@ return KEY."
 Arguments CONTENT-TYPE, KEY, and ORG-ID are common request headers."
   (setq key (openai--resolve-key key))
   (openai--alist-omit-null `(("Content-Type"        . ,content-type)
-                             ("origin"             . ,"https://gpt-chatbotru-4-o1.ru"))))
+                             ;;("origin"             . ,"https://gpt-chatbotru-4-o1.ru")
+			     )))
 
 (defun openai--json-encode (object)
   "Wrapper for function `json-encode' but it remove nil value before
