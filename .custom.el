@@ -24,25 +24,5 @@
 (setq grep-find-command fcommand)
 
 
-;;define function for beautify code
-(defun tidy-python ()
-  "Tidies the Python content in the buffer using `black'"
-  (interactive)
-  (shell-command-on-region
-   ;; beginning and end of buffer
-   (point-min)
-   (point-max)
-   ;; command and parameters (pacman -S python-black before)
-   "black -"
-   ;; output buffer
-   (current-buffer)
-   ;; replace?
-   t
-   ;; name of the error buffer
-   "*Tidy Error Buffer*"
-   ;; show error buffer?
-   t))
-
-;; go to definition (performs better with silversearcher -> pacman -S the_silver_searcher)
-;;(require 'dumb-jump)
+(require 'dumb-jump)
 (global-set-key (kbd "C-c g") 'xref-find-references)
