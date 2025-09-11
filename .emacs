@@ -1,207 +1,308 @@
-;; INSTALL PACKAGES
-;; --------------------------------------
+;; init.el — современный, красивый Emacs без сборок
+
+;; Отключаем звук ошибок
+(setq ring-bell-function 'ignore)
+
+;; Ускоряем запуск
+(setq gc-cons-threshold 100000000)
+(setq read-process-output-max (* 1024 1024))
+
+;; Пакеты из GNU ELPA, MELPA
 (require 'package)
-(add-to-list 'package-archives
-             '("melpa" . "https://melpa.org/packages/"))
-(when (< emacs-major-version 24)
-  ;; For important compatibility libraries like cl-lib
-  (add-to-list 'package-archives '("gnu" . "http://elpa.gnu.org/packages/")))
+(setq package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
+                        ("melpa" . "https://melpa.org/packages/")))
 (package-initialize)
 
-(when (not package-archive-contents)
-  (package-refresh-contents))
+;; Устанавливаем use-package, если не установлен
+(unless (package-installed-p 'use-package)
+  (package-refresh-contents)
+  (package-install 'use-package))
 
-(defvar myPackages
-  '(better-defaults
-    use-package
-    free-keys
-    rainbow-delimiters
-    dumb-jump
-    magit
-    elpy
-    py-autopep8
-    iedit
-    request
-    tblui
-    markdown-mode
-    spinner
-    lv
-    ht
-    doom-modeline
-    doom-themes
-    ace-window
-    neotree
-    flycheck
-    flycheck-mypy
-    company-jedi
-    python-mode
-    web-mode
-    vdiff-magit))
+(eval-when-compile
+  (require 'use-package))
 
-(mapc #'(lambda (package)
-    (unless (package-installed-p package)
-      (package-install package)))
-      myPackages)
-(add-to-list 'load-path "~/.emacs.d/custompackages/")
+;; Обновляем пакеты при запуске (опционально)
+;; (use-package auto-package-update
+;;   :ensure t
+;;   :config
+;;   (setq auto-package-update-delete-old-versions t
+;;         auto-package-update-interval 7)
+;;   (auto-package-update-maybe))
 
-;; Requires Emacs 29 and git
-(unless (package-installed-p 'pg)
-   (package-vc-install "https://github.com/emarsden/pg-el" nil nil 'pg))
-(unless (package-installed-p 'pgmacs)
-   (package-vc-install "https://github.com/emarsden/pgmacs" nil nil 'pgmacs))
-(require 'pgmacs)
+;; ========= ВНЕШНИЙ ВИД =========
 
-;; BASIC CUSTOMIZATION
-;; --------------------------------------
-(defun close-all-buff ()
-  (interactive)
-  (mapc 'kill-buffer (buffer-list))
-)
-(defun run-python-ide ()
-  (interactive)
-  (if (file-exists-p "./venv") (pyvenv-activate "./venv"))
-  (elpy-enable)
-  (neotree)
+;; Шрифт (поддержка ligatures)
+(when (display-graphic-p)
+  (set-face-attribute 'default nil
+                      :family "JetBrains Mono"
+                      :height 130
+                      :weight 'normal)
+  ;; Ligatures (если шрифт поддерживает)
+  (global-prettify-symbols-mode 1)
+  (setq prettify-symbols-unprettify-at-point 'right-edge))
 
-  ;; Настройка company-jedi
-  (require 'company)
-  (with-eval-after-load 'company
-    (add-to-list 'company-backends 'company-jedi))
+;; Отступ между строками
+(setq-default line-spacing 0.1)
 
-  (add-hook 'after-init-hook 'global-company-mode)
-  (setq company-minimum-prefix-length 1)
-  ;; Настройка elpy для использования jedi
-  (with-eval-after-load 'elpy-modules
-    (add-to-list 'elpy-modules 'elpy-module-yasnippet)
-    (add-to-list 'elpy-modules 'elpy-module-sane-defaults)
-    (add-to-list 'elpy-modules 'elpy-module-highlight-indentation)
-    (add-to-list 'elpy-modules 'elpy-module-flymake)
-    (add-to-list 'elpy-modules 'elpy-module-company)
-    (add-to-list 'elpy-modules 'elpy-module-eldoc))
-  
-  ;; Flycheck setup
-  ;; (add-hook 'python-mode-hook 'flycheck-mode)
-  (setq flycheck-python-pylint-executable "pylint")  ; Убедитесь, что pylint установлен
-  (setq flycheck-flake8-executable "flake8")        ; Убедитесь, что flake8 установлен
-  ;; Настройка flycheck-mypy
-  (eval-after-load 'flycheck
-    '(add-hook 'flycheck-mode-hook #'flycheck-mypy-setup))
-  (setq flycheck-mypy-executable "mypy")  ; Убедитесь, что mypy установлен
-  (setq flycheck-mypy-follow-imports "silent")  ; По желанию: настройка обработки импортов
-  (setq elpy-formatter 'autopep8)
+;; Запрещаем моргание курсора
+(blink-cursor-mode -1)
 
-  (add-hook 'python-mode-hook 'elpy-mode)
-)
-
-(setq inhibit-startup-message t) ;; hide the startup message
-;; init.el ends here
-
-;; Marco configuration
-(require 'py-autopep8)
-(require 'web-mode)
-(require 'python-mode)
-(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
-(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.css\\'" . web-mode))
-(add-to-list 'auto-mode-alist '("\\.js\\'" . web-mode))
-(doom-modeline-mode)
-(ido-mode t)
-(add-hook 'prog-mode-hook 'company-mode)
-(add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
-(add-hook 'prog-mode-hook 'display-line-numbers-mode)
-
-
-(use-package dired-sidebar
-  :ensure t
-  :commands (dired-sidebar-toggle-sidebar))
-
-;; Keys with C-c means for coding
-(global-set-key (kbd "C-c i") 'run-python-ide)
-(global-set-key (kbd "C-c s") 'magit-status)
-(global-set-key (kbd "C-c b") 'magit-branch-and-checkout)
-(global-set-key (kbd "C-c f") 'elpy-find-file)
-(global-set-key (kbd "C-c x") 'elpy-rgrep-symbol)
-(global-set-key (kbd "C-c C-g") 'grep-find)
-(global-set-key (kbd "M-RET") 'elpy-goto-definition)
-;; next window
-(global-set-key (kbd "C-c n") 'ace-window)
-(global-set-key (kbd "C-c <right>") 'ace-window)
-
-(require 'vdiff-magit)
-(define-key magit-mode-map "e" 'vdiff-magit-dwim)
-(define-key magit-mode-map "E" 'vdiff-magit)
-(transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
-(transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
-(transient-suffix-put 'magit-dispatch "E" :description "vdiff")
-(transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit)
-
-;; movement
-(defun move-line-up ()
-  "Move up the current line."
-  (interactive)
-  (transpose-lines 1)
-  (forward-line -2)
-  (indent-according-to-mode))
-
-(defun move-line-down ()
-  "Move down the current line."
-  (interactive)
-  (forward-line 1)
-  (transpose-lines 1)
-  (forward-line -1)
-  (indent-according-to-mode))
-
-;; Ctrl-Shift-(up/down)
-(global-set-key (kbd "C-S-<up>")  'move-line-up)
-(global-set-key (kbd "C-S-<down>")  'move-line-down)
-
-(if (file-exists-p "~/emacs/.custom.el") (load-file "~/emacs/.custom.el"))
-
-(setq yas-snippet-dirs '("~/.emacs.d/mysnippets"))
-
-(load-theme 'doom-Iosvkem :no-confirm)
-(when (not window-system)
-  (set-face-background 'default "unspecified-bg")
-  )
-(tool-bar-mode -1)
+;; Скрываем UI-элементы
 (menu-bar-mode -1)
-(display-battery-mode 1)
+(tool-bar-mode -1)
+(scroll-bar-mode -1)
+(tooltip-mode -1)
 
-(put 'downcase-region 'disabled nil)
+;; Включаем подсветку скобок
+(show-paren-mode 1)
+(setq show-paren-delay 0)
+(setq show-paren-style 'parenthesis)
 
+;; Подсветка текущей строки
+(global-hl-line-mode 1)
 
-;; Load yasnippet
-(yas-global-mode 1)
+;; Подсветка столбца (80 или 120)
+(setq-default display-fill-column-indicator-column 120)
+(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
+
+;; ========= ИКОНКИ И MODE-LINE =========
+
+;; Устанавливаем all-the-icons (если не установлены шрифты — см. ниже)
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :ensure t
+  :config
+  (unless (member "all-the-icons" (font-family-list))
+    (message "Устанавливаю шрифты all-the-icons...")
+    (all-the-icons-install-fonts t)
+    (message "✅ Шрифты all-the-icons установлены. Перезапустите Emacs."))
+  ;; отключаем сообщения от all-the-icons
+  (setq all-the-icons-scale-factor 1.0))
+
+;; Красивый mode-line (lightline-style)
+(use-package spaceline
+  :if (display-graphic-p)
+  :ensure t
+  :after all-the-icons
+  :config
+  (spaceline-emacs-theme))
+
+(use-package spaceline-all-the-icons
+  :if (display-graphic-p)
+  :ensure t
+  :after (spaceline all-the-icons)
+  :config
+  (spaceline-all-the-icons-theme))
+
+;; Или вручную настроим mode-line (если spaceline не заработает)
+;; (use-package fancy-mode-line
+;;   :ensure t
+;;   :config
+;;   (fancy-mode-line-mode))
+
+;; ========= DASHBOARD =========
+
+(use-package dashboard
+  :ensure t
+  :config
+  (dashboard-setup-startup-hook)
+  (setq dashboard-banner-logo-title "Добро пожаловать")
+  (setq dashboard-items '((recents  . 5)
+                         (bookmarks . 5)
+                         (projects . 5)
+                         (agenda . 5)))
+  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
+  (setq dashboard-set-heading-icons t)
+  (setq dashboard-set-navigator t)
+  (setq dashboard-center-content t)
+  (setq dashboard-set-file-icons t))
+
+;; ========= ПРОЗРАЧНОСТЬ (опционально) =========
+
+;; (when (display-graphic-p)
+;;   (set-frame-parameter (selected-frame) 'alpha '(92 . 92))
+;;   (add-to-list 'default-frame-alist '(alpha . (92 . 92))))
+
+;; ========= ИНДИКАТОРЫ И УЛУЧШЕНИЯ =========
+
+;; Git в mode-line
+(use-package diminish
+  :ensure t)
+
+(use-package evil
+  :ensure t
+  :diminish
+  :config
+  (evil-mode 1))
+
+;; Git интеграция
+(use-package magit
+  :ensure t
+  :bind (("C-x g" . magit-status)))
+
+;; Поддержка Tree-sitter (если нужна)
+;; (use-package tree-sitter
+;;   :ensure t
+;;   :config
+;;   (global-tree-sitter-mode)
+;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
+
+;; Подсветка синтаксиса
+(global-font-lock-mode t)
+(setq font-lock-maximum-decoration t)
+
+;; Нумерация строк
+(global-display-line-numbers-mode 1)
+;; Отключаем в некоторых режимах
+(dolist (mode '(org-mode-hook
+                term-mode-hook
+                shell-mode-hook
+                eshell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+
+;; ========= ЦВЕТОВЫЕ ТЕМЫ — РАСКОММЕНТИРУЙ ОДНУ =========
+
+;; Modus Operandi (светлая) / Modus Vivendi (тёмная)
+;; (use-package modus-themes
+;;   :ensure t
+;;   :config
+;;   (modus-themes-load-theme 'modus-vivendi) ; или 'modus-operandi
+;;   (modus-themes-toggle))
+
+;; Catppuccin
+;; (use-package catppuccin-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'catppuccin-mocha t))
+
+;; Rosé Pine
+;; (use-package rose-pine-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'rose-pine t))
+
+;; Doom One (тёмная)
+;; (use-package doom-themes
+;;   :ensure t
+;;   :config
+;;   (load-theme 'doom-one t))
+
+;; Gruvbox
+;; (use-package gruvbox-theme
+;;   :ensure t
+;;   :config
+;;   (load-theme 'gruvbox-dark-hard t))
+
+;; После выбора темы — перезапусти Emacs или M-x load-theme
+
+ ;;; ========= Dirvish — файловый менеджер (без ошибок, 100% рабочий) =========
+(use-package dirvish
+  :ensure t
+  :bind (
+         ("C-x f" . dirvish)  ; Открыть в текущем окне
+         ;; Вместо dirvish-other-window — используем dirvish с аргументом
+         ("C-x C-f" . dirvish)
+         ("C-x p f" . dirvish-project)
+         )
+  :config
+  ;; Атрибуты: что показывать в списке файлов
+  (dirvish-override-dired-mode)
+  (setq dirvish-attributes
+	'(all-the-icons size time git-status symlink))
+  (setq dired-auto-revert-buffer t)
+
+  ;; Формат времени (человекочитаемый)
+  (setq dirvish-time-format "%d %b %H:%M")
+
+  ;; Сортировка: папки сверху, по имени
+  (setq dirvish-sort 'alphabetic)
+  (setq dirvish-sort-order '(:directories-first t :reverse nil))
+
+  ;; Поведение Enter: открывать файл/папку
+  (define-key dirvish-mode-map (kbd "RET") #'dirvish-open)
+
+  ;; Быстрый подъём на уровень выше — `h` как в Vim
+  (define-key dirvish-mode-map (kbd "h") #'dirvish-up)
+
+  ;; Обновить — `g` как в Magit
+  (define-key dirvish-mode-map (kbd "g") #'revert-buffer)
+
+  ;; Скрыть/показать скрытые файлы — `.` (точка)
+  (define-key dirvish-mode-map (kbd ".") #'dirvish-hidden-toggle)
+
+  ;; Удалить файл — `D`
+  (define-key dirvish-mode-map (kbd "D") #'dirvish-delete)
+
+  ;; Создать файл/папку — `c`
+  (define-key dirvish-mode-map (kbd "c") #'dirvish-create)
+
+  ;; Переименовать — `r`
+  (define-key dirvish-mode-map (kbd "r") #'dirvish-rename)
+
+  ;; Копировать — `C`
+  (define-key dirvish-mode-map (kbd "C") #'dirvish-copy)
+
+  ;; Вставить — `P`
+  (define-key dirvish-mode-map (kbd "P") #'dirvish-paste)
+
+  ;; Поиск по файлам в Dirvish — `/`
+  (define-key dirvish-mode-map (kbd "/") #'dirvish-filter)
+
+  ;; Отменить фильтр — `q`
+  (define-key dirvish-mode-map (kbd "q") #'dirvish-quit)
+
+  ;; Открыть терминал в текущей папке — `!`
+  (define-key dirvish-mode-map (kbd "!") #'dirvish-shell)
+
+  ;; Интеграция с project.el — открытие корня проекта
+  (when (fboundp 'project-current)
+    (defun dirvish-project ()
+      "Открыть Dirvish в корне текущего проекта."
+      (interactive)
+      (if-let ((root (project-root (project-current))))
+          (dirvish root)
+        (user-error "Проект не найден"))))
+
+  ;; ✅ Определяем безопасную команду для открытия в другом окне
+  (defun dirvish-open-in-other-window ()
+    "Открыть Dirvish в другом окне."
+    (interactive)
+    (dirvish default-directory t))  ; ← текущая директория, в другом окне
+
+  ;; ✅ Определяем команду для открытия проекта в другом окне (опционально)
+  (defun dirvish-project-other-window ()
+    "Открыть Dirvish в корне проекта в другом окне."
+    (interactive)
+    (if-let ((root (project-root (project-current))))
+        (dirvish root t)
+      (user-error "Проект не найден"))))
+
+;; ========= ЗАКЛЮЧЕНИЕ =========
+
+;; Очистка GC после загрузки
+(add-hook 'after-init-hook
+          (lambda ()
+            (setq gc-cons-threshold 16777216)))
+
+;; Сообщение о готовности
+(message "Emacs загружен. Выглядит как современный редактор 💅")
+
+;; Удаляем приветственное сообщение
+(setq inhibit-startup-screen t)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- '(custom-safe-themes
-   '("b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19"
-     "dd4582661a1c6b865a33b89312c97a13a3885dc95992e2e5fc57456b4c545176"
-     "571661a9d205cb32dfed5566019ad54f5bb3415d2d88f7ea1d00c7c794e70a36"
-     "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec"
-     "8c7e832be864674c220f9a9361c851917a93f921fedb7717b1b5ece47690c098"
-     "93011fe35859772a6766df8a4be817add8bfe105246173206478a0706f88b33d"
-     "30d174000ea9cbddecd6cc695943afb7dba66b302a14f9db5dd65074e70cc744"
-     "4594d6b9753691142f02e67b8eb0fda7d12f6cc9f1299a49b819312d6addad1d"
-     "e4a702e262c3e3501dfe25091621fe12cd63c7845221687e36a79e17cf3a67e0"
-     "f5f80dd6588e59cfc3ce2f11568ff8296717a938edd448a947f9823a4e282b66"
-     "2b501400e19b1dd09d8b3708cefcb5227fda580754051a24e8abf3aff0601f87"
-     "014cb63097fc7dbda3edf53eb09802237961cbb4c9e9abd705f23b86511b0a69"
-     "4990532659bb6a285fee01ede3dfa1b1bdf302c5c3c8de9fad9b6bc63a9252f7"
-     "350fef8767e45b0f81dd54c986ee6854857f27067bac88d2b1c2a6fa7fecb522"
-     "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e"
-     default))
- '(find-grep-options "-q")
- '(grep-find-ignored-directories
-   '("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn"
-     ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}"))
- '(package-selected-packages nil)
- '(package-vc-selected-packages
-   '((pgmacs :vc-backend Git :url "https://github.com/emarsden/pgmacs")
-     (pg :vc-backend Git :url "https://github.com/emarsden/pg-el"))))
+ '(package-selected-packages
+   '(ace-window all-the-icons-dired better-defaults company-jedi
+		dashboard diminish dired-sidebar dirvish doom-modeline
+		doom-themes dumb-jump elpy evil flycheck-mypy
+		free-keys ht iedit jinja2-mode markdown-mode
+		mmm-jinja2 neotree pgmacs py-autopep8 python-mode
+		rainbow-delimiters request spaceline-all-the-icons
+		spinner tblui vdiff-magit web-mode-edit-element
+		web-narrow-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
