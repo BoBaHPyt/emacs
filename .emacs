@@ -28,24 +28,28 @@
     lv
     ht
     doom-modeline
-    ace-window))
+    doom-themes
+    ace-window
+    neotree
+    flycheck
+    flycheck-mypy
+    company-jedi
+    python-mode
+    web-mode
+    vdiff-magit))
 
 (mapc #'(lambda (package)
     (unless (package-installed-p package)
       (package-install package)))
       myPackages)
 (add-to-list 'load-path "~/.emacs.d/custompackages/")
-(require 'openai)
-(require 'codegpt)
-(require 'chatgpt)
 
-
-(setq openai-base-url "http://192.210.243.31:1337/v1")
-(setq openai-key "api-key")
-(setq codegpt-tunnel 'chat)
-(setq codegpt-model "gpt-4o")
-(setq chatgpt-model "gpt-4o")
-(setq chatgpt-animate-fps 30)
+;; Requires Emacs 29 and git
+(unless (package-installed-p 'pg)
+   (package-vc-install "https://github.com/emarsden/pg-el" nil nil 'pg))
+(unless (package-installed-p 'pgmacs)
+   (package-vc-install "https://github.com/emarsden/pgmacs" nil nil 'pgmacs))
+(require 'pgmacs)
 
 ;; BASIC CUSTOMIZATION
 ;; --------------------------------------
@@ -57,6 +61,36 @@
   (interactive)
   (if (file-exists-p "./venv") (pyvenv-activate "./venv"))
   (elpy-enable)
+  (neotree)
+
+  ;; Настройка company-jedi
+  (require 'company)
+  (with-eval-after-load 'company
+    (add-to-list 'company-backends 'company-jedi))
+
+  (add-hook 'after-init-hook 'global-company-mode)
+  (setq company-minimum-prefix-length 1)
+  ;; Настройка elpy для использования jedi
+  (with-eval-after-load 'elpy-modules
+    (add-to-list 'elpy-modules 'elpy-module-yasnippet)
+    (add-to-list 'elpy-modules 'elpy-module-sane-defaults)
+    (add-to-list 'elpy-modules 'elpy-module-highlight-indentation)
+    (add-to-list 'elpy-modules 'elpy-module-flymake)
+    (add-to-list 'elpy-modules 'elpy-module-company)
+    (add-to-list 'elpy-modules 'elpy-module-eldoc))
+  
+  ;; Flycheck setup
+  ;; (add-hook 'python-mode-hook 'flycheck-mode)
+  (setq flycheck-python-pylint-executable "pylint")  ; Убедитесь, что pylint установлен
+  (setq flycheck-flake8-executable "flake8")        ; Убедитесь, что flake8 установлен
+  ;; Настройка flycheck-mypy
+  (eval-after-load 'flycheck
+    '(add-hook 'flycheck-mode-hook #'flycheck-mypy-setup))
+  (setq flycheck-mypy-executable "mypy")  ; Убедитесь, что mypy установлен
+  (setq flycheck-mypy-follow-imports "silent")  ; По желанию: настройка обработки импортов
+  (setq elpy-formatter 'autopep8)
+
+  (add-hook 'python-mode-hook 'elpy-mode)
 )
 
 (setq inhibit-startup-message t) ;; hide the startup message
@@ -64,11 +98,18 @@
 
 ;; Marco configuration
 (require 'py-autopep8)
+(require 'web-mode)
+(require 'python-mode)
+(add-to-list 'auto-mode-alist '("\\.py\\'" . python-mode))
+(add-to-list 'auto-mode-alist '("\\.html\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.css\\'" . web-mode))
+(add-to-list 'auto-mode-alist '("\\.js\\'" . web-mode))
 (doom-modeline-mode)
 (ido-mode t)
-(add-hook 'elpy-mode-hook 'py-autopep8-enable-on-save)
+(add-hook 'prog-mode-hook 'company-mode)
 (add-hook 'prog-mode-hook 'rainbow-delimiters-mode)
 (add-hook 'prog-mode-hook 'display-line-numbers-mode)
+
 
 (use-package dired-sidebar
   :ensure t
@@ -86,6 +127,13 @@
 (global-set-key (kbd "C-c n") 'ace-window)
 (global-set-key (kbd "C-c <right>") 'ace-window)
 
+(require 'vdiff-magit)
+(define-key magit-mode-map "e" 'vdiff-magit-dwim)
+(define-key magit-mode-map "E" 'vdiff-magit)
+(transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
+(transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
+(transient-suffix-put 'magit-dispatch "E" :description "vdiff")
+(transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit)
 
 ;; movement
 (defun move-line-up ()
@@ -130,12 +178,30 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(custom-safe-themes
-   '("b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19" "dd4582661a1c6b865a33b89312c97a13a3885dc95992e2e5fc57456b4c545176" "571661a9d205cb32dfed5566019ad54f5bb3415d2d88f7ea1d00c7c794e70a36" "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec" "8c7e832be864674c220f9a9361c851917a93f921fedb7717b1b5ece47690c098" "93011fe35859772a6766df8a4be817add8bfe105246173206478a0706f88b33d" "30d174000ea9cbddecd6cc695943afb7dba66b302a14f9db5dd65074e70cc744" "4594d6b9753691142f02e67b8eb0fda7d12f6cc9f1299a49b819312d6addad1d" "e4a702e262c3e3501dfe25091621fe12cd63c7845221687e36a79e17cf3a67e0" "f5f80dd6588e59cfc3ce2f11568ff8296717a938edd448a947f9823a4e282b66" "2b501400e19b1dd09d8b3708cefcb5227fda580754051a24e8abf3aff0601f87" "014cb63097fc7dbda3edf53eb09802237961cbb4c9e9abd705f23b86511b0a69" "4990532659bb6a285fee01ede3dfa1b1bdf302c5c3c8de9fad9b6bc63a9252f7" "350fef8767e45b0f81dd54c986ee6854857f27067bac88d2b1c2a6fa7fecb522" "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e" default))
+   '("b5fd9c7429d52190235f2383e47d340d7ff769f141cd8f9e7a4629a81abc6b19"
+     "dd4582661a1c6b865a33b89312c97a13a3885dc95992e2e5fc57456b4c545176"
+     "571661a9d205cb32dfed5566019ad54f5bb3415d2d88f7ea1d00c7c794e70a36"
+     "34cf3305b35e3a8132a0b1bdf2c67623bc2cb05b125f8d7d26bd51fd16d547ec"
+     "8c7e832be864674c220f9a9361c851917a93f921fedb7717b1b5ece47690c098"
+     "93011fe35859772a6766df8a4be817add8bfe105246173206478a0706f88b33d"
+     "30d174000ea9cbddecd6cc695943afb7dba66b302a14f9db5dd65074e70cc744"
+     "4594d6b9753691142f02e67b8eb0fda7d12f6cc9f1299a49b819312d6addad1d"
+     "e4a702e262c3e3501dfe25091621fe12cd63c7845221687e36a79e17cf3a67e0"
+     "f5f80dd6588e59cfc3ce2f11568ff8296717a938edd448a947f9823a4e282b66"
+     "2b501400e19b1dd09d8b3708cefcb5227fda580754051a24e8abf3aff0601f87"
+     "014cb63097fc7dbda3edf53eb09802237961cbb4c9e9abd705f23b86511b0a69"
+     "4990532659bb6a285fee01ede3dfa1b1bdf302c5c3c8de9fad9b6bc63a9252f7"
+     "350fef8767e45b0f81dd54c986ee6854857f27067bac88d2b1c2a6fa7fecb522"
+     "88f7ee5594021c60a4a6a1c275614103de8c1435d6d08cc58882f920e0cec65e"
+     default))
  '(find-grep-options "-q")
  '(grep-find-ignored-directories
-   '("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn" ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}"))
- '(package-selected-packages
-   '(projectile doom-modeline doom-themes chatgpt-shell realgud rjsx-mode iedit use-package treemacs-projectile treemacs-evil swiper rainbow-delimiters py-autopep8 neotree magit free-keys elpy dired-sidebar better-defaults all-the-icons-dired)))
+   '("build" "dist" ".idea" "SCCS" "RCS" "CVS" "MCVS" ".src" ".svn"
+     ".git" ".hg" ".bzr" "_MTN" "_darcs" "{arch}"))
+ '(package-selected-packages nil)
+ '(package-vc-selected-packages
+   '((pgmacs :vc-backend Git :url "https://github.com/emarsden/pgmacs")
+     (pg :vc-backend Git :url "https://github.com/emarsden/pg-el"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
