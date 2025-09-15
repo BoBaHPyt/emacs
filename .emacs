@@ -1,308 +1,361 @@
-;; init.el — современный, красивый Emacs без сборок
+;;; init.el — Modern Emacs for Python Development (2025)
 
-;; Отключаем звук ошибок
-(setq ring-bell-function 'ignore)
+;; ==============================
+;; 1. НАСТРОЙКА ПАКЕТОВ — ОБЯЗАТЕЛЬНО В НАЧАЛЕ!
+;; ==============================
 
-;; Ускоряем запуск
-(setq gc-cons-threshold 100000000)
-(setq read-process-output-max (* 1024 1024))
-
-;; Пакеты из GNU ELPA, MELPA
 (require 'package)
-(setq package-archives '(("gnu"   . "https://elpa.gnu.org/packages/")
-                        ("melpa" . "https://melpa.org/packages/")))
-(package-initialize)
 
-;; Устанавливаем use-package, если не установлен
+(setq package-archives
+      '(("gnu"   . "https://elpa.gnu.org/packages/")
+        ("melpa" . "https://melpa.org/packages/")))
+
+;; Отключаем проверку подписей — если есть SSL-проблемы
+(setq package-check-signature nil)
+
+;; Убираем дублирование package-initialize — оставляем ТОЛЬКО ОДИН раз!
+;; Если ты видишь предупреждение — значит, он вызывается где-то ещё.
+;; Проверь: M-x find-file ~/.emacs.d/custom.el и удали там (package-initialize)
+(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
+
+;; Установка use-package (если ещё не установлен)
 (unless (package-installed-p 'use-package)
-  (package-refresh-contents)
   (package-install 'use-package))
 
-(eval-when-compile
-  (require 'use-package))
+(require 'use-package)
+(setq use-package-always-ensure t)
 
-;; Обновляем пакеты при запуске (опционально)
-;; (use-package auto-package-update
-;;   :ensure t
-;;   :config
-;;   (setq auto-package-update-delete-old-versions t
-;;         auto-package-update-interval 7)
-;;   (auto-package-update-maybe))
+(add-to-list 'exec-path (expand-file-name "~/.emacs.d/pytools/bin"))
+;; ==============================
+;; 2. ТЕМА, ШРИФТ, КЛАВИШИ
+;; ==============================
 
-;; ========= ВНЕШНИЙ ВИД =========
-
-;; Шрифт (поддержка ligatures)
-(when (display-graphic-p)
-  (set-face-attribute 'default nil
-                      :family "JetBrains Mono"
-                      :height 130
-                      :weight 'normal)
-  ;; Ligatures (если шрифт поддерживает)
-  (global-prettify-symbols-mode 1)
-  (setq prettify-symbols-unprettify-at-point 'right-edge))
-
-;; Отступ между строками
-(setq-default line-spacing 0.1)
-
-;; Запрещаем моргание курсора
-(blink-cursor-mode -1)
-
-;; Скрываем UI-элементы
 (menu-bar-mode -1)
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
-(tooltip-mode -1)
 
-;; Включаем подсветку скобок
-(show-paren-mode 1)
-(setq show-paren-delay 0)
-(setq show-paren-style 'parenthesis)
+(set-face-attribute 'default nil :font "FiraCode Nerd Font Mono-12")
+(setq default-frame-alist '((font . "FiraCode Nerd Font Mono-12")))
 
-;; Подсветка текущей строки
-(global-hl-line-mode 1)
-
-;; Подсветка столбца (80 или 120)
-(setq-default display-fill-column-indicator-column 120)
-(add-hook 'prog-mode-hook 'display-fill-column-indicator-mode)
-
-;; ========= ИКОНКИ И MODE-LINE =========
-
-;; Устанавливаем all-the-icons (если не установлены шрифты — см. ниже)
+;; Установка иконок (обязательно для doom-modeline)
 (use-package all-the-icons
   :if (display-graphic-p)
-  :ensure t
-  :config
-  (unless (member "all-the-icons" (font-family-list))
-    (message "Устанавливаю шрифты all-the-icons...")
-    (all-the-icons-install-fonts t)
-    (message "✅ Шрифты all-the-icons установлены. Перезапустите Emacs."))
-  ;; отключаем сообщения от all-the-icons
-  (setq all-the-icons-scale-factor 1.0))
-
-;; Красивый mode-line (lightline-style)
-(use-package spaceline
-  :if (display-graphic-p)
-  :ensure t
-  :after all-the-icons
-  :config
-  (spaceline-emacs-theme))
-
-(use-package spaceline-all-the-icons
-  :if (display-graphic-p)
-  :ensure t
-  :after (spaceline all-the-icons)
-  :config
-  (spaceline-all-the-icons-theme))
-
-;; Или вручную настроим mode-line (если spaceline не заработает)
-;; (use-package fancy-mode-line
-;;   :ensure t
-;;   :config
-;;   (fancy-mode-line-mode))
-
-;; ========= DASHBOARD =========
-
-(use-package dashboard
-  :ensure t
-  :config
-  (dashboard-setup-startup-hook)
-  (setq dashboard-banner-logo-title "Добро пожаловать")
-  (setq dashboard-items '((recents  . 5)
-                         (bookmarks . 5)
-                         (projects . 5)
-                         (agenda . 5)))
-  (setq initial-buffer-choice (lambda () (get-buffer-create "*dashboard*")))
-  (setq dashboard-set-heading-icons t)
-  (setq dashboard-set-navigator t)
-  (setq dashboard-center-content t)
-  (setq dashboard-set-file-icons t))
-
-;; ========= ПРОЗРАЧНОСТЬ (опционально) =========
-
-;; (when (display-graphic-p)
-;;   (set-frame-parameter (selected-frame) 'alpha '(92 . 92))
-;;   (add-to-list 'default-frame-alist '(alpha . (92 . 92))))
-
-;; ========= ИНДИКАТОРЫ И УЛУЧШЕНИЯ =========
-
-;; Git в mode-line
-(use-package diminish
   :ensure t)
 
-(use-package evil
+;; Установка doom-modeline
+(use-package doom-modeline
   :ensure t
-  :diminish
+  :init (doom-modeline-mode 1)
+  :custom
+  (doom-modeline-height 25)
+  (doom-modeline-icon t)
+  (doom-modeline-major-mode-icon t)
+  (doom-modeline-buffer-file-name-style 'truncate-upto-root)
+  (doom-modeline-buffer-state-icon t)
+  (doom-modeline-hud t)  ; подсказки при наведении
   :config
-  (evil-mode 1))
+  (when (display-graphic-p)
+    (setq doom-modeline-icon t)))
 
-;; Git интеграция
+(use-package doom-themes
+  :ensure t
+  :init (load-theme 'doom-one t))
+
+;; =============================
+;; magit
+;; =============================
+
 (use-package magit
+  :ensure t)
+
+;; ==============================
+;; 3. PYTHON + LSP-MODE (СОВРЕМЕННЫЙ СПОСОБ!)
+;; ==============================
+
+(use-package python
+  :mode ("\\.py\\'" . python-mode)
+  :hook (python-mode . (lambda ()
+                         (setq python-indent-offset 4))))
+
+(defun my/find-project-venv-dir ()
+  "Find the full path to 'venv' or '.venv' directory in parent directories.
+Returns nil if not found, or full path like \"/path/to/project/venv\"."
+  (let ((venv (locate-dominating-file default-directory "venv"))
+        (.venv (locate-dominating-file default-directory ".venv")))
+    (cond
+     (venv (expand-file-name "venv" venv))
+     (.venv (expand-file-name ".venv" .venv))
+     (t nil))))
+
+(defun my/set-python-venv ()
+  "Set python-shell-interpreter to project venv if found."
+  (let ((venv-full-path (my/find-project-venv-dir)))
+    (if venv-full-path
+        (progn
+          (setq-local python-shell-interpreter (expand-file-name "bin/python3" venv-full-path))
+          (message "✅ Python interpreter set to: %s" python-shell-interpreter))
+      (message "⚠️ No Python venv or .venv found in project."))))
+
+(add-hook 'python-mode-hook 'my/set-python-venv)
+
+(use-package lsp-ui
   :ensure t
-  :bind (("C-x g" . magit-status)))
-
-;; Поддержка Tree-sitter (если нужна)
-;; (use-package tree-sitter
-;;   :ensure t
-;;   :config
-;;   (global-tree-sitter-mode)
-;;   (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode))
-
-;; Подсветка синтаксиса
-(global-font-lock-mode t)
-(setq font-lock-maximum-decoration t)
-
-;; Нумерация строк
-(global-display-line-numbers-mode 1)
-;; Отключаем в некоторых режимах
-(dolist (mode '(org-mode-hook
-                term-mode-hook
-                shell-mode-hook
-                eshell-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))
-
-;; ========= ЦВЕТОВЫЕ ТЕМЫ — РАСКОММЕНТИРУЙ ОДНУ =========
-
-;; Modus Operandi (светлая) / Modus Vivendi (тёмная)
-;; (use-package modus-themes
-;;   :ensure t
-;;   :config
-;;   (modus-themes-load-theme 'modus-vivendi) ; или 'modus-operandi
-;;   (modus-themes-toggle))
-
-;; Catppuccin
-;; (use-package catppuccin-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'catppuccin-mocha t))
-
-;; Rosé Pine
-;; (use-package rose-pine-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'rose-pine t))
-
-;; Doom One (тёмная)
-;; (use-package doom-themes
-;;   :ensure t
-;;   :config
-;;   (load-theme 'doom-one t))
-
-;; Gruvbox
-;; (use-package gruvbox-theme
-;;   :ensure t
-;;   :config
-;;   (load-theme 'gruvbox-dark-hard t))
-
-;; После выбора темы — перезапусти Emacs или M-x load-theme
-
- ;;; ========= Dirvish — файловый менеджер (без ошибок, 100% рабочий) =========
-(use-package dirvish
-  :ensure t
-  :bind (
-         ("C-x f" . dirvish)  ; Открыть в текущем окне
-         ;; Вместо dirvish-other-window — используем dirvish с аргументом
-         ("C-x C-f" . dirvish)
-         ("C-x p f" . dirvish-project)
-         )
+  :hook (lsp-mode . lsp-ui-mode)
   :config
-  ;; Атрибуты: что показывать в списке файлов
-  (dirvish-override-dired-mode)
-  (setq dirvish-attributes
-	'(all-the-icons size time git-status symlink))
-  (setq dired-auto-revert-buffer t)
+  (setq lsp-ui-doc-position 'top
+        lsp-ui-sideline-enable t
+        lsp-ui-imenu-enable t))
 
-  ;; Формат времени (человекочитаемый)
-  (setq dirvish-time-format "%d %b %H:%M")
+(use-package company
+  :ensure t
+  :hook (python-mode . company-mode)
+  :init (global-company-mode))
 
-  ;; Сортировка: папки сверху, по имени
-  (setq dirvish-sort 'alphabetic)
-  (setq dirvish-sort-order '(:directories-first t :reverse nil))
+;; ==============================
+;; 3. PYTHON + LSP-MODE + DAP — С ОБЩЕЙ VENV
+;; ==============================
 
-  ;; Поведение Enter: открывать файл/папку
-  (define-key dirvish-mode-map (kbd "RET") #'dirvish-open)
+;; Путь к общей venv для инструментов
+(defvar my/python-tools-venv "~/.emacs.d/pytools"
+  "Path to shared virtual environment for Python LSP/DAP servers.")
 
-  ;; Быстрый подъём на уровень выше — `h` как в Vim
-  (define-key dirvish-mode-map (kbd "h") #'dirvish-up)
+;; Указываем lsp-mode использовать сервер из общей venv
+(use-package lsp-mode
+  :ensure t
+  :hook (python-mode . lsp)
+  :commands lsp
+  :init
+  (setq lsp-log-io nil)
+  :config
+  ;; Включаем форматирование при сохранении (опционально)
+  (add-hook 'before-save-hook 'lsp-format-buffer nil t)
 
-  ;; Обновить — `g` как в Magit
-  (define-key dirvish-mode-map (kbd "g") #'revert-buffer)
+  ;; ИЛИ — привязываем к клавишам (рекомендуется)
+  (define-key lsp-mode-map (kbd "C-;") 'lsp-rename)
 
-  ;; Скрыть/показать скрытые файлы — `.` (точка)
-  (define-key dirvish-mode-map (kbd ".") #'dirvish-hidden-toggle)
+  ;; Настраиваем pylsp использовать black (или yapf)
+  (setq lsp-pylsp-plugins-black-enabled t)
+  (setq lsp-pylsp-plugins-black-line-length 79)
+  (setq lsp-headerline-breadcrumb-mode nil)
+  )
 
-  ;; Удалить файл — `D`
-  (define-key dirvish-mode-map (kbd "D") #'dirvish-delete)
+(use-package lsp-pyright
+  :ensure t
+  :after (python lsp-mode)
+  :custom
+  (setq lsp-pyright-venv-path "./venv/bin/python")
+)
 
-  ;; Создать файл/папку — `c`
-  (define-key dirvish-mode-map (kbd "c") #'dirvish-create)
+;; Включаем dap-mode глобально
+(use-package dap-mode
+  :ensure t
+  :commands (dap-debug dap-stop dap-continue dap-step-in dap-step-out dap-next)
+  :config
+  (dap-mode 1))
 
-  ;; Переименовать — `r`
-  (define-key dirvish-mode-map (kbd "r") #'dirvish-rename)
+(require 'dap-python)
+(setq dap-python-debugger 'debugpy)
+;; Настройка dap-mode — используем debugpy из общей venv
+(dap-register-debug-template "My App"
+			     (list :type "python"
+				   :request "launch"
+				   :args "-i"
+				   :cwd "${workspaceFolder}"
+				   :env '(("DEBUG" . "1") (PYTHONPATH . "${workspaceFolder}"))
+				   :program "${file}"
+				   :console "integratedTerminal"
+				   :name "Python File"))
 
-  ;; Копировать — `C`
-  (define-key dirvish-mode-map (kbd "C") #'dirvish-copy)
+;; Привязываем клавиши отладки
+(global-set-key (kbd "C-c d b") 'dap-breakpoint-toggle)
+(global-set-key (kbd "C-c d r") 'dap-debug)
+(global-set-key (kbd "C-c d s") 'dap-next)
+(global-set-key (kbd "C-c d i") 'dap-step-in)
+(global-set-key (kbd "C-c d o") 'dap-step-out)
+(global-set-key (kbd "C-c d c") 'dap-continue)
+(global-set-key (kbd "C-c d q") 'dap-disconnect)
+(global-set-key (kbd "C-c d l") 'dap-breakpoints-list)
 
-  ;; Вставить — `P`
-  (define-key dirvish-mode-map (kbd "P") #'dirvish-paste)
+;; ==============================
+;; 5. ПЕРЕХОД К ОПРЕДЕЛЕНИЮ — БЕЗ C->!
+;; ==============================
 
-  ;; Поиск по файлам в Dirvish — `/`
-  (define-key dirvish-mode-map (kbd "/") #'dirvish-filter)
+(defun lsp-goto-definition ()
+  "Перейти к определению символа под курсором."
+  (interactive)
+  (lsp-find-definition))
 
-  ;; Отменить фильтр — `q`
-  (define-key dirvish-mode-map (kbd "q") #'dirvish-quit)
+(defun lsp-go-back ()
+  "Вернуться назад после перехода к определению."
+  (interactive)
+  (lsp-workspace-references :only-definitions t))
 
-  ;; Открыть терминал в текущей папке — `!`
-  (define-key dirvish-mode-map (kbd "!") #'dirvish-shell)
+(global-set-key (kbd "M-g d") 'lsp-goto-definition)
+(global-set-key (kbd "M-g r") 'lsp-go-back)
 
-  ;; Интеграция с project.el — открытие корня проекта
-  (when (fboundp 'project-current)
-    (defun dirvish-project ()
-      "Открыть Dirvish в корне текущего проекта."
-      (interactive)
-      (if-let ((root (project-root (project-current))))
-          (dirvish root)
-        (user-error "Проект не найден"))))
+;; ==============================
+;; 6. PROJECTILE + IVY — ВЫБОР ПРОЕКТА
+;; ==============================
 
-  ;; ✅ Определяем безопасную команду для открытия в другом окне
-  (defun dirvish-open-in-other-window ()
-    "Открыть Dirvish в другом окне."
-    (interactive)
-    (dirvish default-directory t))  ; ← текущая директория, в другом окне
+(use-package projectile
+  :ensure t
+  :init (projectile-mode +1)
+  :bind (("C-c p p" . projectile-switch-project)
+         ("C-c p f" . projectile-find-file))
+  :config
+  (setq projectile-project-search-path '("~/projects" "~/work"))
+  (setq projectile-indexing-method 'native)
+  (setq projectile-completion-system 'ivy)
 
-  ;; ✅ Определяем команду для открытия проекта в другом окне (опционально)
-  (defun dirvish-project-other-window ()
-    "Открыть Dirvish в корне проекта в другом окне."
-    (interactive)
-    (if-let ((root (project-root (project-current))))
-        (dirvish root t)
-      (user-error "Проект не найден"))))
+  ;; 🚫 Скрываем временные файлы и папки в projectile
+  (setq projectile-globally-ignored-files
+        '(".*#$" ".*~$" ".*\\.pyc$" ".*\\.swp$" "\\.DS_Store$" "TAGS$" "tags$"))
 
-;; ========= ЗАКЛЮЧЕНИЕ =========
+  (setq projectile-globally-ignored-directories
+        '(".git" ".svn" ".hg" "CVS" "__pycache__" "venv" ".venv" "node_modules" "dist" "build" ".mypy_cache" ".pytest_cache"))
 
-;; Очистка GC после загрузки
-(add-hook 'after-init-hook
-          (lambda ()
-            (setq gc-cons-threshold 16777216)))
+  (setq projectile-enable-caching t)
+  (setq projectile-cache-file (expand-file-name "projectile.cache~" user-emacs-directory)))
 
-;; Сообщение о готовности
-(message "Emacs загружен. Выглядит как современный редактор 💅")
+(use-package ivy
+  :ensure t
+  :init (ivy-mode +1)
+  :config
+  (setq ivy-use-virtual-buffers t)
+  (setq ivy-height 15)
+  (setq ivy-re-builders-alist '((t . ivy--regex-fuzzy)))
+  (setq ivy-initial-inputs-alist nil)
 
-;; Удаляем приветственное сообщение
-(setq inhibit-startup-screen t)
+  ;; RET на папке = зайти внутрь, не открывать Dired
+  (define-key ivy-minibuffer-map (kbd "RET") 'ivy-alt-done)
+  ;; C-j = создать файл/папку
+  (define-key ivy-minibuffer-map (kbd "C-j") 'ivy-immediate-done))
+
+(use-package swiper
+  :ensure t
+  :bind (("C-s" . swiper)))
+
+(use-package avy
+  :ensure t
+  :bind (("M-g g" . avy-goto-line)
+	 ("M-g c" . avy-goto-char)))
+
+;; Фильтр для скрытия файлов
+(defun my/ignore-files (str)
+  "Ignore venv, tmp, backup files."
+  (not (string-match-p "\\(^[.#].*\\|~$\\|__pycache__$\\|\\.py[co]$\\|\\.swp$\\)" str)))
+
+;; Применяем фильтр к find-file
+(add-to-list 'ivy--display-transformers-alist 'my/ignore-files)
+;; ==============================
+;; 7. DIREND SIDEBAR — NEO-TREE
+;; ==============================
+
+(use-package neotree
+  :ensure t
+  :bind (("C-x n" . neotree-toggle))
+  :config
+  (setq neo-theme 'icons)
+  (setq neo-smart-open t)
+  (setq neo-show-hidden-files t)
+  (setq neo-auto-resize t)
+  (setq neo保持窗口宽度 30))
+
+;; ==============================
+;; 8. WEB / HTML / JS / CSS / JINJA2
+;; ==============================
+
+(use-package web-mode
+  :ensure t
+  :mode ("\\.html?\\'" . web-mode)
+  :hook (web-mode . (lambda ()
+                      (setq web-mode-engines-alist '(("django" . "\\.html$")))
+                      (setq web-mode-markup-indent-offset 2)
+                      (setq web-mode-css-indent-offset 2)
+                      (setq web-mode-code-indent-offset 2)))
+  :config
+  (add-to-list 'auto-mode-alist '("\\.jinja2\\'" . web-mode))
+  (add-to-list 'auto-mode-alist '("\\.j2\\'" . web-mode)))
+
+(use-package js2-mode
+  :ensure t
+  :mode ("\\.js\\'" . js2-mode)
+  :hook (js2-mode . (lambda () (setq js2-basic-offset 2))))
+
+(use-package css-mode
+  :ensure t
+  :mode ("\\.css\\'" . css-mode))
+
+;; ==============================
+;; 9. ЗАПУСК PYTHON / UVICORN
+;; ==============================
+
+(defun run-python-script ()
+  "Запустить текущий Python-файл."
+  (interactive)
+  (if (buffer-modified-p) (save-buffer))
+  (let ((cmd (format "python3 %s" (buffer-file-name))))
+    (compile cmd)))
+
+(global-set-key (kbd "C-c r") 'run-python-script)
+
+(defun run-uvicorn ()
+  "Запустить uvicorn на текущем файле (FastAPI)."
+  (interactive)
+  (let ((file (buffer-file-name)))
+    (if (not file)
+        (message "Сохраните файл перед запуском!")
+      (let ((dir (file-name-directory file))
+            (name (file-name-nondirectory file)))
+        (compile (format "cd %s && uvicorn %s:app --reload" dir name))))))
+
+(global-set-key (kbd "C-c u") 'run-uvicorn)
+
+;; ==============================
+;; 10. ДРУГИЕ НАСТРОЙКИ
+;; ==============================
+
+(setq inhibit-startup-message t)
+(setq indent-tabs-mode nil)
+(setq tab-width 4)
+(setq default-tab-width 4)
+(setq auto-save-default t)
+(setq backup-directory-alist `((".*" . ,temporary-file-directory)))
+(setq make-backup-files nil)
+(setq auto-save-file-name-transforms `((".*" ,temporary-file-directory t)))
+
+;; Перемещение строк
+(defun move-line-up ()
+  (interactive)
+  (let ((col (current-column)))
+    (transpose-lines 1)
+    (forward-line -1)
+    (move-to-column col)))
+
+(defun move-line-down ()
+  (interactive)
+  (let ((col (current-column)))
+    (forward-line 1)
+    (transpose-lines 1)
+    (forward-line -1)
+    (move-to-column col)))
+
+(global-set-key (kbd "M-<up>") 'move-line-up)
+(global-set-key (kbd "M-<down>") 'move-line-down)
+
+;; Удаление лишних пробелов
+(add-hook 'before-save-hook 'delete-trailing-whitespace)
 (custom-set-variables
  ;; custom-set-variables was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(ace-window all-the-icons-dired better-defaults company-jedi
-		dashboard diminish dired-sidebar dirvish doom-modeline
-		doom-themes dumb-jump elpy evil flycheck-mypy
-		free-keys ht iedit jinja2-mode markdown-mode
-		mmm-jinja2 neotree pgmacs py-autopep8 python-mode
-		rainbow-delimiters request spaceline-all-the-icons
-		spinner tblui vdiff-magit web-mode-edit-element
-		web-narrow-mode)))
+   '(all-the-icons company dap-mode doom-modeline doom-themes js2-mode
+		   lsp-pyright lsp-ui magit neotree projectile swiper
+		   web-mode)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
