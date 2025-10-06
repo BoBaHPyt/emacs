@@ -3,8 +3,21 @@
 ;; ==============================
 ;; 1. НАСТРОЙКА ПАКЕТОВ — ОБЯЗАТЕЛЬНО В НАЧАЛЕ!
 ;; ==============================
+(setq straight-check-for-modifications nil)
+(defvar bootstrap-version)
+(let ((bootstrap-file
+       (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+      (bootstrap-version 5))
+  (unless (file-exists-p bootstrap-file)
+    (with-current-buffer
+        (url-retrieve-synchronously
+         "https://raw.githubusercontent.com/raxod502/straight.el/develop/install.el"
+         'silent 'inhibit-cookies)
+      (goto-char (point-max))
+      (eval-print-last-sexp)))
+  (load bootstrap-file nil 'nomessage))
 
-(require 'package)
+(straight-use-package 'use-package)
 
 (setq package-archives
       '(("gnu"   . "https://elpa.gnu.org/packages/")
@@ -20,12 +33,8 @@
 (unless package-archive-contents
   (package-refresh-contents))
 
-;; Установка use-package (если ещё не установлен)
-(unless (package-installed-p 'use-package)
-  (package-install 'use-package))
-
-(require 'use-package)
-(setq use-package-always-ensure t)
+(setq redisplay-dont-pause t)
+(setq idle-update-delay 0.016)
 
 (add-to-list 'exec-path (expand-file-name "~/.emacs.d/pytools/bin"))
 ;; ==============================
@@ -36,8 +45,8 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 
-(set-face-attribute 'default nil :font "FiraCode Nerd Font Mono-12")
-(setq default-frame-alist '((font . "FiraCode Nerd Font Mono-12")))
+(set-face-attribute 'default nil :font "FiraCode Nerd Font Mono-9.5")
+(setq default-frame-alist '((font . "FiraCode Nerd Font Mono-9.5")))
 
 ;; Установка иконок (обязательно для doom-modeline)
 (use-package all-the-icons
@@ -64,12 +73,18 @@
   :init (load-theme 'doom-one t))
 
 ;; =============================
-;; magit
+;; magit + pgmacs
 ;; =============================
 
 (use-package magit
   :ensure t)
 
+(unless (package-installed-p 'pg)
+   (package-vc-install "https://github.com/emarsden/pg-el" nil nil 'pg))
+(unless (package-installed-p 'pgmacs)
+   (package-vc-install "https://github.com/emarsden/pgmacs" nil nil 'pgmacs))
+
+(require 'pgmacs)
 ;; ==============================
 ;; 3. PYTHON + LSP-MODE (СОВРЕМЕННЫЙ СПОСОБ!)
 ;; ==============================
@@ -205,19 +220,19 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
   :bind (("C-c p p" . projectile-switch-project)
          ("C-c p f" . projectile-find-file))
   :config
-  (setq projectile-project-search-path '("~/projects" "~/work"))
+  (setq projectile-project-search-path '("~/projects"))
   (setq projectile-indexing-method 'native)
   (setq projectile-completion-system 'ivy)
 
   ;; 🚫 Скрываем временные файлы и папки в projectile
   (setq projectile-globally-ignored-files
-        '(".*#$" ".*~$" ".*\\.pyc$" ".*\\.swp$" "\\.DS_Store$" "TAGS$" "tags$"))
+	'("#$" "~$" "\\.pyc$" "\\.swp$" "\\.DS_Store$" "TAGS$" "tags$"))
 
   (setq projectile-globally-ignored-directories
-        '(".git" ".svn" ".hg" "CVS" "__pycache__" "venv" ".venv" "node_modules" "dist" "build" ".mypy_cache" ".pytest_cache"))
+	'(".git" ".svn" ".hg" "CVS" "__pycache__" "venv" ".venv" "node_modules" "dist" "build" ".mypy_cache" ".pytest_cache"))
 
-  (setq projectile-enable-caching t)
-  (setq projectile-cache-file (expand-file-name "projectile.cache~" user-emacs-directory)))
+  (setq projectile-enable-caching 'persistent)
+  (setq projectile-cache-file ".projectile.cache"))
 
 (use-package ivy
   :ensure t
@@ -249,19 +264,6 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
 
 ;; Применяем фильтр к find-file
 (add-to-list 'ivy--display-transformers-alist 'my/ignore-files)
-;; ==============================
-;; 7. DIREND SIDEBAR — NEO-TREE
-;; ==============================
-
-(use-package neotree
-  :ensure t
-  :bind (("C-x n" . neotree-toggle))
-  :config
-  (setq neo-theme 'icons)
-  (setq neo-smart-open t)
-  (setq neo-show-hidden-files t)
-  (setq neo-auto-resize t)
-  (setq neo保持窗口宽度 30))
 
 ;; ==============================
 ;; 8. WEB / HTML / JS / CSS / JINJA2
@@ -313,6 +315,24 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
 
 (global-set-key (kbd "C-c u") 'run-uvicorn)
 
+
+;; ==============================
+;; ai
+;; =============================
+
+(use-package emigo
+  :straight (:host github :repo "MatthewZMD/emigo" :files (:defaults "*.py" "*.el"))
+  :config
+  (emigo-enable) ;; Starts the background process automatically
+  :custom
+  ;; Encourage using OpenRouter with Deepseek
+  (emigo-model "openrouter/x-ai/grok-4-fast:free")
+  (emigo-base-url "https://openrouter.ai/api/v1")
+  (emigo-api-key "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"))
+
+(use-package restclient
+  :mode ("\\.http\\'" . restclient-mode))
+
 ;; ==============================
 ;; 10. ДРУГИЕ НАСТРОЙКИ
 ;; ==============================
@@ -353,9 +373,13 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(all-the-icons company dap-mode doom-modeline doom-themes js2-mode
-		   lsp-pyright lsp-ui magit neotree projectile swiper
-		   web-mode)))
+   '(all-the-icons company dap-mode doom-modeline doom-themes emigo
+		   js2-mode lsp-pyright lsp-ui magit neotree pg pgmacs
+		   projectile swiper web-mode))
+ '(package-vc-selected-packages
+   '((emigo :url "https://github.com/MatthewZMD/emigo.git" :branch "main")
+     (pgmacs :vc-backend Git :url "https://github.com/emarsden/pgmacs")
+     (pg :vc-backend Git :url "https://github.com/emarsden/pg-el"))))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
