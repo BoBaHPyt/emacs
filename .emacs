@@ -116,15 +116,20 @@
 (add-hook 'python-mode-hook 'my/set-python-venv)
 
 ;; --- Eglot: настройка сервера ---
-(defvar my/python-tools-venv "~/.emacs.d/pytools"
-  "Path to shared virtual environment for Python LSP servers.")
-
 ;; Путь к общей venv с pyright и debugpy
 (defvar my/python-tools-venv (expand-file-name "~/.emacs.d/pytools")
   "Shared virtual environment for LSP and debug tools.")
 
 ;; Убедись, что pyright установлен в этой venv:
 ;; ~/.emacs.d/pytools/bin/pip install pyright
+
+(defun my/eglot-python-config (_server)
+    "Return workspace config with PROJECT'S venv."
+    (let ((project-venv (my/find-project-venv-dir)))
+      (when project-venv
+        `(:python (:pythonPath ,(expand-file-name "bin/python" my/python-tools-venv)
+                  :venvPath ,(file-name-directory (directory-file-name project-venv))
+                  :venv ,(file-name-nondirectory (directory-file-name project-venv)))))))
 
 (use-package eglot
   :ensure t  ; не обязательно в Emacs 29+, но безопасно
@@ -133,7 +138,9 @@
   ;; Регистрируем pyright из общей venv как сервер для Python
   (add-to-list 'eglot-server-programs
                `(python-mode .
-                 ("pyenv" "exec" "pyright-langserver" "--stdio")))
+			     ("pyright-langserver" "--stdio")))
+
+  (setq-default eglot-workspace-configuration #'my/eglot-python-config)
 
   ;; Общие настройки eglot
   (setq eglot-events-buffer-size 0) ; меньше логов
