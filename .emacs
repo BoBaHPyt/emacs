@@ -127,9 +127,9 @@
     "Return workspace config with PROJECT'S venv."
     (let ((project-venv (my/find-project-venv-dir)))
       (when project-venv
-        `(:python (:pythonPath ,(expand-file-name "bin/python" my/python-tools-venv)
-                  :venvPath ,(file-name-directory (directory-file-name project-venv))
-                  :venv ,(file-name-nondirectory (directory-file-name project-venv)))))))
+        `(:python (:pythonPath ,(expand-file-name "bin/python" project-venv)
+                  :venvPath ,(file-name-directory project-venv)
+                  :venv ,(file-name-nondirectory project-venv))))))
 
 (use-package eglot
   :ensure t  ; не обязательно в Emacs 29+, но безопасно
@@ -153,7 +153,6 @@
   ;; Горячая клавиша переименования
   (define-key eglot-mode-map (kbd "C-;") 'eglot-rename))
 
-;; --- Вспомогательная функция: запуск eglot с правильной конфигурацией ---
 (defun my/setup-eglot-with-project-venv ()
   "Start eglot with project venv configured for Pyright."
   (interactive)
@@ -162,12 +161,59 @@
     (when project-venv
       ;; Передаём Pyright путь к интерпретатору проекта
       (setq-local eglot-workspace-configuration
-                  `(:python (:venvPath ,project-venv
-                            :pythonPath ,(expand-file-name "bin/python" project-venv)))))
+                  `(:python (:pythonPath ,(expand-file-name "bin/python" project-venv)
+					:venvPath ,(file-name-directory project-venv)
+					:venv ,(file-name-nondirectory project-venv)))))
     ;; Запускаем eglot
     (eglot-ensure)))
 
+
+
 ;; --- UI: подсказки, sideline и т.д. ---
+;; Corfu — современная замена company
+(use-package corfu
+  :ensure t
+  :hook (eglot-managed-mode . corfu-mode)  ; включать только при управлении LSP
+  :init
+  ;; Глобально можно не включать — лучше по контексту
+  (global-corfu-mode)
+  (corfu-popupinfo-mode 1)
+  :custom
+  (
+  (corfu-auto t)                ; автоматическое всплывание
+  (corfu-separator ?\s)         ; разделитель в списке
+  (corfu-quit-at-boundary t)    ; выход при достижении границы
+  (corfu-preselect-first t)     ; выделять первый вариант
+  (corfu-cycle t)               ; зацикливать список
+  (corfu-icons-enabled t)
+  (corfu-popupinfo-delay 0.3)
+  (corfu-popupinfo-max-width 70)
+  (corfu-popupinfo-max-height 20)
+  ))
+
+
+(use-package vertico
+  :ensure t
+  ;; :custom
+  ;; (vertico-scroll-margin 0) ;; Different scroll margin
+  ;; (vertico-count 20) ;; Show more candidates
+  ;; (vertico-resize t) ;; Grow and shrink the Vertico minibuffer
+  ;; (vertico-cycle t) ;; Enable cycling for `vertico-next/previous'
+  :init
+  (vertico-mode))
+
+(use-package orderless
+  :ensure t
+  :demand t
+  :config
+  (setq completion-styles '(orderless flex)
+        completion-category-overrides '((eglot (styles . (orderless flex))))))
+
+(use-package marginalia
+  :ensure t
+  :init
+  (marginalia-mode))
+
 ;; Eglot использует встроенные механизмы Emacs: `eldoc`, `xref`, `imenu`
 ;; Для всплывающих подсказок можно использовать `eglot-ui` или `lsp-ui` (но lsp-ui не нужен!)
 
@@ -397,7 +443,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(all-the-icons company dap-mode doom-modeline doom-themes emigo
+   '(all-the-icons dap-mode doom-modeline doom-themes emigo
 		   js2-mode lsp-pyright lsp-ui magit neotree pg pgmacs
 		   projectile swiper web-mode))
  '(package-vc-selected-packages
