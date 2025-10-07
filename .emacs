@@ -86,7 +86,7 @@
 
 (require 'pgmacs)
 ;; ==============================
-;; 3. PYTHON + LSP-MODE (СОВРЕМЕННЫЙ СПОСОБ!)
+;; 3. PYTHON + EGLot (СОВРЕМЕННЫЙ СПОСОБ!)
 ;; ==============================
 
 (use-package python
@@ -94,9 +94,9 @@
   :hook (python-mode . (lambda ()
                          (setq python-indent-offset 4))))
 
+;; --- Твоя функция поиска venv ---
 (defun my/find-project-venv-dir ()
-  "Find the full path to 'venv' or '.venv' directory in parent directories.
-Returns nil if not found, or full path like \"/path/to/project/venv\"."
+  "Find the full path to 'venv' or '.venv' directory in parent directories."
   (let ((venv (locate-dominating-file default-directory "venv"))
         (.venv (locate-dominating-file default-directory ".venv")))
     (cond
@@ -115,55 +115,69 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
 
 (add-hook 'python-mode-hook 'my/set-python-venv)
 
-(use-package lsp-ui
-  :ensure t
-  :hook (lsp-mode . lsp-ui-mode)
-  :config
-  (setq lsp-ui-doc-position 'top
-        lsp-ui-sideline-enable t
-        lsp-ui-imenu-enable t))
-
-(use-package company
-  :ensure t
-  :hook (python-mode . company-mode)
-  :init (global-company-mode))
-
-;; ==============================
-;; 3. PYTHON + LSP-MODE + DAP — С ОБЩЕЙ VENV
-;; ==============================
-
-;; Путь к общей venv для инструментов
+;; --- Eglot: настройка сервера ---
 (defvar my/python-tools-venv "~/.emacs.d/pytools"
-  "Path to shared virtual environment for Python LSP/DAP servers.")
+  "Path to shared virtual environment for Python LSP servers.")
 
-;; Указываем lsp-mode использовать сервер из общей venv
-(use-package lsp-mode
-  :ensure t
-  :hook (python-mode . lsp)
-  :commands lsp
-  :init
-  (setq lsp-log-io nil)
+;; Путь к общей venv с pyright и debugpy
+(defvar my/python-tools-venv (expand-file-name "~/.emacs.d/pytools")
+  "Shared virtual environment for LSP and debug tools.")
+
+;; Убедись, что pyright установлен в этой venv:
+;; ~/.emacs.d/pytools/bin/pip install pyright
+
+(use-package eglot
+  :ensure t  ; не обязательно в Emacs 29+, но безопасно
+  :hook (python-mode . my/setup-eglot-with-project-venv)
   :config
-  ;; Включаем форматирование при сохранении (опционально)
-  (add-hook 'before-save-hook 'lsp-format-buffer nil t)
+  ;; Регистрируем pyright из общей venv как сервер для Python
+  (add-to-list 'eglot-server-programs
+               `(python-mode .
+                 ("pyenv" "exec" "pyright-langserver" "--stdio")))
 
-  ;; ИЛИ — привязываем к клавишам (рекомендуется)
-  (define-key lsp-mode-map (kbd "C-;") 'lsp-rename)
+  ;; Общие настройки eglot
+  (setq eglot-events-buffer-size 0) ; меньше логов
 
-  ;; Настраиваем pylsp использовать black (или yapf)
-  (setq lsp-pylsp-plugins-black-enabled t)
-  (setq lsp-pylsp-plugins-black-line-length 79)
-  (setq lsp-headerline-breadcrumb-mode nil)
-  )
+  ;; Форматирование при сохранении
+  (add-hook 'eglot-managed-mode-hook
+            (lambda ()
+              (add-hook 'before-save-hook #'eglot-format nil t)))
 
-(use-package lsp-pyright
-  :ensure t
-  :after (python lsp-mode)
-  :custom
-  (setq lsp-pyright-venv-path "./venv/bin/python")
-)
+  ;; Горячая клавиша переименования
+  (define-key eglot-mode-map (kbd "C-;") 'eglot-rename))
 
-;; Включаем dap-mode глобально
+;; --- Вспомогательная функция: запуск eglot с правильной конфигурацией ---
+(defun my/setup-eglot-with-project-venv ()
+  "Start eglot with project venv configured for Pyright."
+  (interactive)
+  ;; Находим проектный venv (venv или .venv)
+  (let ((project-venv (my/find-project-venv-dir)))
+    (when project-venv
+      ;; Передаём Pyright путь к интерпретатору проекта
+      (setq-local eglot-workspace-configuration
+                  `(:python (:venvPath ,project-venv
+                            :pythonPath ,(expand-file-name "bin/python" project-venv)))))
+    ;; Запускаем eglot
+    (eglot-ensure)))
+
+;; --- UI: подсказки, sideline и т.д. ---
+;; Eglot использует встроенные механизмы Emacs: `eldoc`, `xref`, `imenu`
+;; Для всплывающих подсказок можно использовать `eglot-ui` или `lsp-ui` (но lsp-ui не нужен!)
+
+;; Простая замена lsp-ui-doc:
+(use-package eldoc
+  :hook (eglot-managed-mode . eldoc-mode)
+  :config
+  (setq eldoc-echo-area-use-multiline-p t))
+
+;; Для sideline-диагностики (как в lsp-ui):
+(use-package flymake
+  :hook (python-mode . flymake-mode)
+  :config
+  ;; Eglot автоматически интегрируется с flymake
+  (setq flymake-wrap-around nil))
+
+;; --- DAP (отладка) — остаётся без изменений! ---
 (use-package dap-mode
   :ensure t
   :commands (dap-debug dap-stop dap-continue dap-step-in dap-step-out dap-next)
@@ -172,18 +186,22 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
 
 (require 'dap-python)
 (setq dap-python-debugger 'debugpy)
-;; Настройка dap-mode — используем debugpy из общей venv
-(dap-register-debug-template "My App"
-			     (list :type "python"
-				   :request "launch"
-				   :args "-i"
-				   :cwd "${workspaceFolder}"
-				   :env '(("DEBUG" . "1") (PYTHONPATH . "${workspaceFolder}"))
-				   :program "${file}"
-				   :console "integratedTerminal"
-				   :name "Python File"))
 
-;; Привязываем клавиши отладки
+;; Убедись, что debugpy установлен в той же venv:
+;; ~/.emacs.d/pytools/bin/pip install debugpy
+
+(dap-register-debug-template
+ "My App"
+ (list :type "python"
+       :request "launch"
+       :args "-i"
+       :cwd "${workspaceFolder}"
+       :env '(("DEBUG" . "1") (PYTHONPATH . "${workspaceFolder}"))
+       :program "${file}"
+       :console "integratedTerminal"
+       :name "Python File"))
+
+;; Горячие клавиши отладки — без изменений
 (global-set-key (kbd "C-c d b") 'dap-breakpoint-toggle)
 (global-set-key (kbd "C-c d r") 'dap-debug)
 (global-set-key (kbd "C-c d s") 'dap-next)
@@ -193,22 +211,21 @@ Returns nil if not found, or full path like \"/path/to/project/venv\"."
 (global-set-key (kbd "C-c d q") 'dap-disconnect)
 (global-set-key (kbd "C-c d l") 'dap-breakpoints-list)
 
-;; ==============================
-;; 5. ПЕРЕХОД К ОПРЕДЕЛЕНИЮ — БЕЗ C->!
-;; ==============================
+;; --- Навигация: переход к определению ---
+;; Eglot интегрируется с `xref` — стандартным механизмом Emacs
 
-(defun lsp-goto-definition ()
+(defun eglot-goto-definition ()
   "Перейти к определению символа под курсором."
   (interactive)
-  (lsp-find-definition))
+  (xref-find-definitions (thing-at-point 'symbol)))
 
-(defun lsp-go-back ()
-  "Вернуться назад после перехода к определению."
+(defun eglot-go-back ()
+  "Вернуться назад после перехода."
   (interactive)
-  (lsp-workspace-references :only-definitions t))
+  (xref-pop-marker-stack))
 
-(global-set-key (kbd "M-g d") 'lsp-goto-definition)
-(global-set-key (kbd "M-g r") 'lsp-go-back)
+(global-set-key (kbd "M-g d") 'eglot-goto-definition)
+(global-set-key (kbd "M-g r") 'eglot-go-back)
 
 ;; ==============================
 ;; 6. PROJECTILE + IVY — ВЫБОР ПРОЕКТА
